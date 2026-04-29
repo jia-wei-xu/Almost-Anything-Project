@@ -1,3 +1,5 @@
+import java.util.HashSet;
+
 public class Car 
 {
     public Edge currentEdge;
@@ -6,7 +8,11 @@ public class Car
     public double speed;
     public double x;
     public double y;
+    public HashSet<Edge> visitedEdges = new HashSet<>();
+    public Node goalNode;
+    public Graph graph;
 
+//spawn traffic
     public Car(Edge edge) 
     {
         this.currentEdge = edge;
@@ -16,6 +22,7 @@ public class Car
         updatePosition();
     }
 
+//movement logic
     public void move() 
     {
         if (currentEdge == null) 
@@ -46,6 +53,7 @@ public class Car
                 return;
             }
             
+            visitedEdges.add(currentEdge);
             Edge nextEdge = pickNextEdge(targetNode);
             
             if (nextEdge != null) 
@@ -72,42 +80,52 @@ public class Car
         updatePosition();
     }
 
+//choose direction car goes based on weights
     private Edge pickNextEdge(Node node) 
     {
         int totalWeight = 0;
         
-        for (int i = 0; i < node.connections.length; i++) 
+        // Calculate total weight of all possible edges
+        for (Edge e : node.connections) 
         {
-            Edge e = node.connections[i];
-            if (e != null && e != currentEdge) 
+            if (e != null && e != currentEdge && !visitedEdges.contains(e)) 
             {
-                totalWeight += 1 + e.cars.size();
+                Node targetNode = (e.from == node) ? e.to : e.from;
+                if (targetNode.isActive) {
+                    totalWeight += 1 + e.cars.size();
+                }
             }
         }
         
+        // If there are no valid edges, clear visited and return current edge (turn around)
         if (totalWeight == 0) 
         {
+            visitedEdges.clear();
             return currentEdge;
         }
         
         int random = (int) (Math.random() * totalWeight);
         int count = 0;
         
-        for (int i = 0; i < node.connections.length; i++) 
+        for (Edge e : node.connections) 
         {
-            Edge e = node.connections[i];
-            if (e != null && e != currentEdge) 
+            if (e != null && e != currentEdge && !visitedEdges.contains(e)) 
             {
-                count += 1 + e.cars.size();
-                if (random < count) 
-                {
-                    return e;
+                Node targetNode = (e.from == node) ? e.to : e.from;
+                if (targetNode.isActive) {
+                    count += 1 + e.cars.size();
+                    if (random < count) 
+                    {
+                        visitedEdges.add(e);
+                        return e;
+                    }
                 }
             }
         }
         
         return currentEdge;
     }
+
 
     private void updatePosition() 
     {
