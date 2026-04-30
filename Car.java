@@ -1,37 +1,44 @@
 import java.util.HashSet;
 
+//Car class to represent traffic on edges
 public class Car 
 {
+    //Car position variables
     public Edge currentEdge;
     public boolean movingToB;
     public double progress;
     public double speed;
     public double x;
     public double y;
+
+    //Car navigation variables
     public HashSet<Edge> visitedEdges = new HashSet<>();
     public Node goalNode;
     public Graph graph;
 
-//spawn traffic
+    //Constructor to randomly initialize car on an edge
     public Car(Edge edge) 
     {
         this.currentEdge = edge;
         this.movingToB = true;
         this.progress = 0.0;
-        this.speed = Math.random() * 2.0 + 1.0;
+        this.speed = Math.random() + 1.0;
         updatePosition();
     }
 
-//movement logic
+    //Movement logic for car
     public void move() 
     {
+        //If no current edge, do nothing
         if (currentEdge == null) 
         {
             return;
         }
         
+        //Move along current edge based on speed
         progress += speed / currentEdge.getDistance();
         
+        //If reached end of edge, pick next edge to move on
         if (progress >= 1.0) 
         {
             progress = 0.0;
@@ -54,8 +61,11 @@ public class Car
             }
             
             visitedEdges.add(currentEdge);
+
+            //Pick next edge based on weights
             Edge nextEdge = pickNextEdge(targetNode);
             
+            //If no valid next edge, turn around
             if (nextEdge != null) 
             {
                 currentEdge.cars.remove(this);
@@ -80,12 +90,12 @@ public class Car
         updatePosition();
     }
 
-//choose direction car goes based on weights
+    //Choose direction car goes based on weights
     private Edge pickNextEdge(Node node) 
     {
         int totalWeight = 0;
         
-        // Calculate total weight of all possible edges
+        //Calculate total weight of all possible edges
         for (Edge e : node.connections) 
         {
             if (e != null && e != currentEdge && !visitedEdges.contains(e)) 
@@ -97,7 +107,7 @@ public class Car
             }
         }
         
-        // If there are no valid edges, clear visited and return current edge (turn around)
+        //If there are no valid edges, clear visited and return current edge (turn around)
         if (totalWeight == 0) 
         {
             visitedEdges.clear();
@@ -107,6 +117,7 @@ public class Car
         int random = (int) (Math.random() * totalWeight);
         int count = 0;
         
+        //Pick edge based on weighted random selection
         for (Edge e : node.connections) 
         {
             if (e != null && e != currentEdge && !visitedEdges.contains(e)) 
@@ -127,6 +138,7 @@ public class Car
     }
 
 
+    //Update car's x and y position based on current edge and progress
     private void updatePosition() 
     {
         if (currentEdge == null) 
